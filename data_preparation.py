@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import random
+import sys
 
 def create_dataframe():
 	articles1_df = pd.read_csv(sys.argv[1] + "/articles1.csv")
