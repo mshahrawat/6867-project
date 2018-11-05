@@ -5,6 +5,7 @@ from model import *
 from utils import *
 from os.path import isfile
 from tqdm import tqdm
+import time
 
 def load_data():
     data = []
@@ -41,6 +42,7 @@ def train():
     filename = re.sub("\.epoch[0-9]+$", "", sys.argv[1])
     print(model)
     print("training model...")
+    start_time = time.time()
     for ei in tqdm(range(epoch + 1, epoch + num_epochs + 1)):
         loss_sum = 0
         timer = time.time()
@@ -57,6 +59,8 @@ def train():
             save_checkpoint("", None, ei, loss_sum, timer)
         else:
             save_checkpoint(filename, model, ei, loss_sum, timer)
+    end_time = time.time()
+    print('Finished Training in', (end_time - start_time) / 60)
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
