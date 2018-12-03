@@ -133,6 +133,12 @@ def avg_polarity_score(text):
     pscore_list = polarity_score_by_sentence(text)
     return np.array(pscore_list.mean())
 
+def var_polarity_score(text):
+    #input: document text
+    #output: (1,4) np.array, four numbers corresponding to'neg','neu','pos','compound'
+    
+    pscore_list = polarity_score_by_sentence(text)
+    return np.array(pscore_list.var())
 
 
 
@@ -151,5 +157,6 @@ print("Num words in total: ", num_word(onesample))
 print("average word per sentence: ", avg_word_per_sen(onesample))
 print("Num named entity: ",num_named_entity(onesample))
 print("fraction of words: (noun, verb)", frac_words(onesample))
-print("average polarity score: ('neg','neu','pos','compound') =",avg_polarity_score(onesample))
+print("average of the polarity scores: ('neg','neu','pos','compound') =",avg_polarity_score(onesample))
+print("variance of the polarity scores: ('neg','neu','pos','compound') =",var_polarity_score(onesample))
 
