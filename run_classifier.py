@@ -41,6 +41,26 @@ def tokenize(x, unit):
     if unit == "word":
         return x.split(" ")
 
+class TfidfAndTopicTransformer(TfidfTransformer):
+    
+    def __init__(self, norm='l2', use_idf=True, smooth_idf=True,
+                 sublinear_tf=False, n_components=10, doc_topic_prior=None,
+                 topic_word_prior=None, learning_method='batch', learning_decay=0.7,
+                 learning_offset=10.0, max_iter=10, batch_size=128,
+                 evaluate_every=-1, total_samples=1000000.0, perp_tol=0.1, mean_change_tol=0.001, max_doc_update_iter=100, n_jobs=None, verbose=0, random_state=None, n_topics=None):
+        super().__init__(norm, use_idf, smooth_idf, sublinear_tf)
+        self._topicModel = LatentDirichletAllocation(n_components, doc_topic_prior, topic_word_prior, learning_method, learning_decay, learning_offset, max_iter, batch_size, evaluate_every, total_samples, perp_tol, mean_change_tol, max_doc_update_iter, n_jobs, verbose, random_state, n_topics)
+    
+    def fit(self, X, y=None):
+        super().fit(X)
+        self._topicModel.fit(X)
+        return self
+    
+    def transform(self, X, copy=True):
+        temp1 = super().transform(X, copy)
+        temp2 = self._topicModel.transform(X)
+        return sparse.hstack([temp1, sparse.csr_matrix(temp2)])
+
 # get data
 def load_data():
     X_train, y_train, X_test, y_test = [], [], [], []
