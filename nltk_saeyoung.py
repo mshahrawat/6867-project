@@ -1,5 +1,4 @@
 import numpy as np
-import sklearn as sk
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -126,20 +125,50 @@ def polarity_score_by_sentence(text):
         pscore_list.loc[i+1,:] = pscore
     return pscore_list
 
-def avg_polarity_score(text):
+def polarity_scores(text):
     #input: document text
-    #output: (1,4) np.array, four numbers corresponding to'neg','neu','pos','compound'
+    #output: (1,8) np.array, first four-avg, last four-variance
+    #four numbers corresponding to'neg','neu','pos','compound'
     
     pscore_list = polarity_score_by_sentence(text)
-    return np.array(pscore_list.mean())
-
-def var_polarity_score(text):
-    #input: document text
-    #output: (1,4) np.array, four numbers corresponding to'neg','neu','pos','compound'
     
-    pscore_list = polarity_score_by_sentence(text)
-    return np.array(pscore_list.var())
+    return np.append(pscore_list.mean(),pscore_list.var())
 
+
+
+#making dataframe
+
+def make_stylo_features(X):
+    #input: document text
+    #output: dataframe, one row (for one article)
+    Y = np.array([[num_sen(X),num_word(X), avg_word_per_sen(X), num_named_entity(X)]])
+    Y = np.concatenate((Y,frac_words(X),polarity_scores(X)), axis=None)
+    
+    Y = pd.DataFrame(np.array([Y]), columns= ["num_sen","num_word", "avg_word_per_sen", "num_named_entity","frac_words_noun","frac_words_verb",
+                    "avg_polarity_score_negative","avg_polarity_score_neutral","avg_polarity_score_positive","avg_polarity_score_compound",
+                    "var_polarity_score_negative","var_polarity_score_neutral","var_polarity_score_positive","var_polarity_score_compound"])  
+    return Y
+
+def make_stylo_features_df(data):
+    #input: train/test dataset (dataframe)
+    #output: dataframe of stylo features
+    #apply make_stylo_features row by row and return the df of size (num_row_dataset x 14)
+    stylo_features = make_stylo_features(data.loc[1,"content"])
+    for i in range(1,data.shape[0]):
+        X = data.loc[i,"content"]
+        stylo_features = pd.concat([stylo_features,make_stylo_features(X)], axis=0, ignore_index=True)
+    return stylo_features
+
+def add_stylo_features(data):
+    #input: train/test dataset (dataframe)
+    #output: dataframe
+    #add stylo feature columns to the original dataset
+    stylo_features = make_stylo_features(data.loc[1,"content"])
+    for i in range(1,data.shape[0]):
+        X = data.loc[i,"content"]
+        stylo_features = pd.concat([stylo_features,make_stylo_features(X)], axis=0, ignore_index=True)
+    data = pd.concat([data,stylo_features], axis=1)
+    return data
 
 
 # load data from csv files
@@ -147,10 +176,10 @@ def var_polarity_score(text):
 articles1_df = pd.read_csv("data/articles1.csv")
 articles2_df = pd.read_csv("data/articles2.csv")
 articles3_df = pd.read_csv("data/articles3.csv")
-articles_df = pd.concat([articles1_df, articles2_df, articles3_df])
+articles_df = pd.concat([articles1_df, articles2_df, articles3_df],ignore_index=True)
 
 #sample data for the test
-onesample = sample.ix[1,"content"]
+# onesample = sample.ix[1,"content"]
 
 print("Num sentences in total: ", num_sen(onesample))
 print("Num words in total: ", num_word(onesample))
@@ -159,4 +188,14 @@ print("Num named entity: ",num_named_entity(onesample))
 print("fraction of words: (noun, verb)", frac_words(onesample))
 print("average of the polarity scores: ('neg','neu','pos','compound') =",avg_polarity_score(onesample))
 print("variance of the polarity scores: ('neg','neu','pos','compound') =",var_polarity_score(onesample))
+
+
+if __name__ == "__main__":
+    stylo_data_1 = make_stylo_features_df(articles1_df)
+    stylo_data_1.to_csv('stylo_data_1.csv', encoding='utf-8')
+    stylo_data_2 = make_stylo_features_df(articles2_df)
+    stylo_data_2.to_csv('stylo_data_2.csv', encoding='utf-8')
+    stylo_data_3 = make_stylo_features_df(articles3_df)
+    stylo_data_3.to_csv('stylo_data_3.csv', encoding='utf-8')
+
 
